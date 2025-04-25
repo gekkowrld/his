@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -21,7 +20,6 @@ type ProgramInfo struct {
 	Description string `json:"description"`
 	StartDate   int    `json:"start_date"`
 	EndDate     int    `json:"end_date"`
-	CreatedOn   int    `json:"created_on"`
 }
 
 type ProgramPost struct {
@@ -33,7 +31,7 @@ type ProgramPost struct {
 
 // Write the program name into db
 // If there is an Error, it prints the error to the writer and stdout and exits.
-func (p *Program) PostProgram(w http.ResponseWriter, r *http.Request) {
+func (p *Program) CreateProgram(w http.ResponseWriter, r *http.Request) {
 	var program ProgramPost
 	err := json.NewDecoder(r.Body).Decode(&program)
 	if err != nil {
@@ -46,7 +44,6 @@ func (p *Program) PostProgram(w http.ResponseWriter, r *http.Request) {
 	prog_info.Description = program.Description
 	prog_info.StartDate = program.StartDate
 	prog_info.EndDate = program.EndDate
-	prog_info.CreatedOn = time.Now().Second()
 
 	uuid7, err := uuid.NewV7()
 	if err != nil {
@@ -56,7 +53,7 @@ func (p *Program) PostProgram(w http.ResponseWriter, r *http.Request) {
 	prog_info.Id = uuid7.String()
 
 	res, err := p.DB.Exec(p.InsertSQL,
-		prog_info.Id, prog_info.Name, prog_info.Description, prog_info.StartDate, prog_info.EndDate, prog_info.CreatedOn)
+		prog_info.Id, prog_info.Name, prog_info.Description, prog_info.StartDate, prog_info.EndDate)
 
 	if err != nil {
 		w.Write([]byte(err.Error()))

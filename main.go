@@ -36,9 +36,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error opening schema file for reading: %s", err)
 	}
-	insert_sql, err := sqldb.ReadFile("db/add_program.sql")
+	add_program, err := sqldb.ReadFile("db/add_program.sql")
 	if err != nil {
 		log.Fatalf("Error opening add_program file for reading: %s", err)
+	}
+	add_client, err := sqldb.ReadFile("db/add_client.sql")
+	if err != nil {
+		log.Fatalf("Error opening add_client file for reading: %s", err)
 	}
 
 	res.schema = string(db_shema)
@@ -47,10 +51,12 @@ func main() {
 		log.Fatalf("Setup error: %v", err)
 	}
 	rest.db = db
-	prog := api.Program{DB: db, InsertSQL: string(insert_sql)}
+	prog := api.Program{DB: db, InsertSQL: string(add_program)}
+	client := api.Client{DB: db, InsertSQL: string(add_client)}
 
 	router := http.NewServeMux()
-	router.HandleFunc("POST /program", prog.PostProgram)
+	router.HandleFunc("POST /program", prog.CreateProgram)
+	router.HandleFunc("POST /client", client.CreateClient)
 
 	server := http.Server{Addr: ":2343", Handler: router}
 

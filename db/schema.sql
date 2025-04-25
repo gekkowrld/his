@@ -24,10 +24,30 @@ CREATE TABLE IF NOT EXISTS health_program (
 	start_date INTEGER NOT NULL,
 
 	-- If NULL, then it will never end.
-	end_date INTEGER,
-
-	-- This is the day that the program was created, should be GREATER
-	-- than the start_date and end_date
-	created_on INTEGER NOT NULL
+	end_date INTEGER
 );
 
+CREATE TABLE IF NOT EXISTS client (
+	id VARCHAR(40) PRIMARY KEY UNIQUE NOT NULL,
+
+	-- Allow the name to be as long as possible (uniocode can easily be accomodated)
+	first_name TEXT NOT NULL,
+	middle_name TEXT, -- Some people have only 2 names
+	last_name TEXT NOT NULL,
+
+	-- This is date of birth, since sqlite doesn't have datetime, just
+	-- 	request the individual segments
+	day INTEGER NOT NULL,
+	month INTEGER NOT NULL,
+	year INTEGER NOT NULL
+);
+
+-- Follows the guidance of:
+-- 	https://www.geeksforgeeks.org/mysql-on-delete-cascade-constraint/
+CREATE TABLE IF NOT EXISTS client_program (
+	client_id VARCHAR(40) NOT NULL,
+	program_id VARCHAR(40) NOT NULL,
+	PRIMARY KEY (client_id, program_id),
+	FOREIGN KEY (client_id) REFERENCES client(id) ON DELETE CASCADE,
+	FOREIGN KEY (program_id) REFERENCES health_program(id) ON DELETE CASCADE
+);
