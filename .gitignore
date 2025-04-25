@@ -4,6 +4,7 @@
 *.dll
 *.so
 *.dylib
+his
 
 # Test binary, built with `go test -c`
 *.test
@@ -20,3 +21,6 @@ go.work.sum
 
 # Ideas for use
 *.idea
+
+# Others
+db/health_sys
