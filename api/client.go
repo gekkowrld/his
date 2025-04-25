@@ -16,6 +16,7 @@ type Client struct {
 	InsertSQL   string
 	AddPrograms string
 	Search      string
+	Profile     string
 }
 
 type ClientInfo struct {
@@ -182,4 +183,29 @@ func SearchClient(query string, db *sql.DB, search string) ([]search_value, erro
 	}
 
 	return search_values, nil
+}
+
+type clientProfile struct {
+	Id        string
+	FirstName string
+	LastName  string
+}
+
+func (c *Client) ClientProfile(w http.ResponseWriter, r *http.Request) {
+	client_id := r.PathValue("id")
+	info, err := ClientProfile(client_id, c.DB, c.Profile)
+	if err != nil {
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Write([]byte(fmt.Sprintf("%#v\n", info)))
+}
+
+// Get user profile and return it.
+func ClientProfile(id string, db *sql.DB, search string) (clientProfile, error) {
+	var profile clientProfile
+	row := db.QueryRow(search, id)
+	row.Scan(&profile.Id, &profile.FirstName, &profile.LastName)
+
+	return profile, nil
 }

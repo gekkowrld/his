@@ -52,6 +52,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error opening client_search file for reading: %s", err)
 	}
+	profile, err := sqldb.ReadFile("db/user_profile.sql")
+	if err != nil {
+		log.Fatalf("Error opening user_profile file for reading: %s", err)
+	}
 
 	res.schema = string(db_shema)
 	db, err := initial_setup(res)
@@ -65,6 +69,7 @@ func main() {
 		InsertSQL:   string(add_client),
 		AddPrograms: string(client_program),
 		Search:      string(search_client),
+		Profile:     string(profile),
 	}
 
 	router := http.NewServeMux()
@@ -72,6 +77,7 @@ func main() {
 	router.HandleFunc("POST /client", client.CreateClient)
 	router.HandleFunc("POST /client/{id}", client.ClientProgram)
 	router.HandleFunc("GET /search/client", client.SearchClient)
+	router.HandleFunc("GET /client/{id}", client.ClientProfile)
 
 	server := http.Server{Addr: ":2343", Handler: router}
 
