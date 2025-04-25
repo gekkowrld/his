@@ -10,3 +10,19 @@ The program includes:
 - Search for a client profile
 - Expose client info via API
 - Login for doctor/user (implicit, basic login)
+
+## build
+
+```sh
+make build
+```
+
+This builds the go code.
+
+## run
+
+```
+./his # .\his.exe for windows
+```
+
+Runs the executable
