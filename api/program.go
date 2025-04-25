@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -25,27 +26,43 @@ type ProgramInfo struct {
 // Write the program name into db
 // If there is an Error, it prints the error to the writer and stdout and exits.
 func (p *Program) CreateProgram(w http.ResponseWriter, r *http.Request) {
-	var program ProgramInfo
-	err := json.NewDecoder(r.Body).Decode(&program)
+	json_data, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		return
+	}
+	defer r.Body.Close()
+
+	res, program, err := CreateProgram(json_data, p.DB, p.InsertSQL)
 	if err != nil {
 		w.Write([]byte(err.Error()))
 		return
+	}
+
+	PrintDBResult(res)
+	w.Write([]byte(fmt.Sprintf("%s %s", affectedRows(res.RowsAffected), program.Id)))
+}
+
+// Create a program and write it to the database.
+func CreateProgram(jsonData []byte, db *sql.DB, insertSQL string) (sql.Result, ProgramInfo, error) {
+	var program ProgramInfo
+	err := json.Unmarshal(jsonData, &program)
+	if err != nil {
+		return nil, program, err
 	}
 
 	uuid7, err := uuid.NewV7()
 	if err != nil {
-		w.Write([]byte(err.Error()))
-		return
+		return nil, program, err
 	}
 	program.Id = uuid7.String()
 
-	res, err := p.DB.Exec(p.InsertSQL,
+	res, err := db.Exec(insertSQL,
 		program.Id, program.Name, program.Description, program.StartDate, program.EndDate)
 
 	if err != nil {
-		w.Write([]byte(err.Error()))
-		return
+		return nil, program, err
 	}
-	PrintDBResult(res)
-	w.Write([]byte(fmt.Sprintf("%s %s", affectedRows(res.RowsAffected), program.Id)))
+
+	return res, program, nil
 }
