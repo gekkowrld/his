@@ -7,10 +7,14 @@ import (
 )
 
 func PrintDBResult(result sql.Result) {
-	log.Println(affectedRows(result))
+	log.Println(affectedRows(result.RowsAffected))
 }
 
-func affectedRows(result sql.Result) string {
-	affected, _ := result.RowsAffected()
-	return fmt.Sprintf("%d rows affected", affected)
+func affectedRows(result func() (int64, error)) string {
+	affected, _ := result()
+	var row = "rows"
+	if affected == 1 {
+		row = "row"
+	}
+	return fmt.Sprintf("%d %s affected", affected, row)
 }

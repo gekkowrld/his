@@ -47,5 +47,5 @@ func (p *Program) CreateProgram(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	PrintDBResult(res)
-	w.Write([]byte(fmt.Sprintf("%s %s", affectedRows(res), program.Id)))
+	w.Write([]byte(fmt.Sprintf("%s %s", affectedRows(res.RowsAffected), program.Id)))
 }
