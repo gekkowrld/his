@@ -14,6 +14,7 @@ type Client struct {
 	DB          *sql.DB
 	InsertSQL   string
 	AddPrograms string
+	Search      string
 }
 
 type ClientInfo struct {
@@ -105,4 +106,38 @@ func (c *Client) ClientProgram(w http.ResponseWriter, r *http.Request) {
 	rows_affected := fmt.Sprintf("%s client=%s programs=%v", affectedRows(func() (int64, error) { return affected, nil }), client_id, clp.Programs)
 	log.Println(rows_affected)
 	w.Write([]byte(rows_affected))
+}
+
+type search_value struct {
+	Id        string
+	FirstName string
+	LastName  string
+}
+
+// search the client table for matches.
+// user searches are passed directly to the db AS IS
+// NOTE: This poses a security risk as it is vulnerable to SQL injeection
+func (c *Client) SearchClient(w http.ResponseWriter, r *http.Request) {
+	search_term := r.URL.Query().Get("q")
+	rows, err := c.DB.Query(c.Search, search_term)
+	if err != nil {
+		w.Write([]byte(fmt.Sprintf("err: %v", err.Error())))
+		return
+	}
+	defer rows.Close()
+
+	var search_values []search_value
+	for rows.Next() {
+		s := &search_value{}
+		if err := rows.Scan(&s.Id, &s.FirstName, &s.LastName); err != nil {
+			log.Fatal("Row scan error:", err)
+		}
+		search_values = append(search_values, *s)
+	}
+	if err := rows.Err(); err != nil {
+		log.Fatal("Row error:", err)
+	}
+	str := fmt.Sprintf("Results for: %s\n%v\n", search_term, search_values)
+	log.Println(str)
+	w.Write([]byte(str))
 }

@@ -48,6 +48,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error opening client_program file for reading: %s", err)
 	}
+	search_client, err := sqldb.ReadFile("db/client_search.sql")
+	if err != nil {
+		log.Fatalf("Error opening client_search file for reading: %s", err)
+	}
 
 	res.schema = string(db_shema)
 	db, err := initial_setup(res)
@@ -56,12 +60,18 @@ func main() {
 	}
 	rest.db = db
 	prog := api.Program{DB: db, InsertSQL: string(add_program)}
-	client := api.Client{DB: db, InsertSQL: string(add_client), AddPrograms: string(client_program)}
+	client := api.Client{
+		DB:          db,
+		InsertSQL:   string(add_client),
+		AddPrograms: string(client_program),
+		Search:      string(search_client),
+	}
 
 	router := http.NewServeMux()
 	router.HandleFunc("POST /program", prog.CreateProgram)
 	router.HandleFunc("POST /client", client.CreateClient)
 	router.HandleFunc("POST /client/{id}", client.ClientProgram)
+	router.HandleFunc("GET /search/client", client.SearchClient)
 
 	server := http.Server{Addr: ":2343", Handler: router}
 

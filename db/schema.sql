@@ -1,9 +1,9 @@
-/**
-Define the schema to be used by the program.
-It is expected to be run once on startup, its safe to do so.
-This will be modelled around SQLite and Go types.
-	https://sqlite.org/datatype3.html
-*/
+-- Define the schema to be used by the program.
+-- It is expected to be run once on startup, its safe to do so.
+-- This will be modelled around SQLite and Go types.
+-- 		https://sqlite.org/datatype3.html
+
+PRAGMA auto_vacuum = FULL;
 
 CREATE TABLE IF NOT EXISTS health_program (
 	-- This is supposed to be UUID 7, but we'll treat it as a string
@@ -51,3 +51,35 @@ CREATE TABLE IF NOT EXISTS client_program (
 	FOREIGN KEY (client_id) REFERENCES client(id) ON DELETE CASCADE,
 	FOREIGN KEY (program_id) REFERENCES health_program(id) ON DELETE CASCADE
 );
+
+-- Create virtual tables that will be used during searching.
+-- This are crucial for fast search
+CREATE VIRTUAL TABLE IF NOT EXISTS client_fts USING FTS5(
+	id UNINDEXED,
+	first_name,
+	middle_name,
+	last_name,
+	content=client,
+);
+
+-- Create triggers to mirror the actions being done on the main table.
+-- This ensures that the tables are in sync so as not to produce wrong results.
+CREATE TRIGGER IF NOT EXISTS client_ai AFTER INSERT ON client
+BEGIN
+  INSERT INTO client_fts(id, first_name, middle_name, last_name)
+  VALUES (new.id, new.first_name, new.middle_name, new.last_name);
+END;
+
+CREATE TRIGGER IF NOT EXISTS client_au AFTER UPDATE ON client
+BEGIN
+  UPDATE client_fts
+  SET first_name = new.first_name,
+      middle_name = new.middle_name,
+      last_name = new.last_name
+  WHERE id = new.id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS client_ad AFTER DELETE ON client
+BEGIN
+  DELETE FROM client_fts WHERE id = old.id;
+END;
