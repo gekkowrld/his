@@ -96,10 +96,10 @@ func WriteSucessClientProgram(w http.ResponseWriter, clientId string, programs [
 }
 
 func WriteSuccessProgram(w http.ResponseWriter, program ProgramInfo) {
-	data,err := json.Marshal(program)
+	data, err := json.Marshal(program)
 	if err != nil {
 		WriteError(w, EJ{Message: err, Code: http.StatusInternalServerError})
 	}
 	log.Printf("%#v\n", program)
-	writeHttp(w,data)
+	writeHttp(w, data)
 }

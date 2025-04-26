@@ -10,11 +10,11 @@
         <form name="auth">
             <p>
                 <label for="username">Username:</label>
-                <input type="text" name="username" id="username">
+                <input type="text" name="username" id="username" />
             </p>
             <p>
                 <label for="passwd">Password:</label>
-                <input type="password" name="passwd" id="passwd">
+                <input type="password" name="passwd" id="passwd" />
             </p>
         </form>
 
@@ -91,12 +91,14 @@
         <hr />
 
         <h2>Search Client</h2>
-        <form name="search_client" method="get" action="http://localhost:2344/search/client">
+        <form name="search_client">
             <p>
                 <label for="q">Enter client name:</label>
                 <input name="q" id="q" type="text" />
             </p>
         </form>
+
+        <div id="search_info"></div>
 
         <hr />
         <hr />
@@ -117,7 +119,7 @@
                 const password = document.getElementById("passwd").value;
                 return {
                     "Content-Type": "application/json",
-                    "Authorization": `Basic ${btoa(username + ":" + password)}`
+                    Authorization: `Basic ${btoa(username + ":" + password)}`,
                 };
             }
 
@@ -166,7 +168,7 @@
                     name: name,
                     description: description,
                     start_date: start_date,
-                    end_date: end_date
+                    end_date: end_date,
                 };
             }
 
@@ -181,7 +183,7 @@
                 const arrPrograms = programLines.map((line) => line.trim()).filter((line) => line.length > 0);
 
                 return {
-                    programs: arrPrograms
+                    programs: arrPrograms,
                 };
             }
 
@@ -257,6 +259,30 @@
                     });
             }
 
+            function prettyClientProfile(data) {
+                const programs = data.programs
+                    .map(
+                        (program) => `
+        <div>
+            <strong>Program Name:</strong> ${program.name} <br/>
+            <strong>Program ID:</strong> ${program.id} <br/>
+        </div>
+    `
+                    )
+                    .join("<hr />");
+
+                return `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+            <h3>Client Profile</h3>
+            <p><strong>ID:</strong> ${data.id}</p>
+            <p><strong>First Name:</strong> ${data.first_name}</p>
+            <p><strong>Last Name:</strong> ${data.last_name}</p>
+            <h4>Programs:</h4>
+            ${programs}
+        </div>
+    `;
+            }
+
             function handleGetProfile(event) {
                 event.preventDefault();
                 const client_id = event.target.querySelector("#client_id").value;
@@ -273,10 +299,51 @@
                         }
                     })
                     .then((data) => {
-                        statusDiv.innerHTML = `<span style="color: green;">Client profile: ${JSON.stringify(data)}</span>`;
+                        statusDiv.innerHTML = prettyClientProfile(data);
                     })
                     .catch((err) => {
                         statusDiv.innerHTML = `<span style="color: red;">Error fetching client profile: ${err.message}</span>`;
+                    });
+            }
+
+            function prettySearchResults(results) {
+                return results
+                    .map(
+                        (client) => `
+        <div style="border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; font-family: Arial, sans-serif; border-radius: 5px;">
+            <p><strong>ID:</strong> ${client.id}</p>
+            <p><strong>First Name:</strong> ${client.first_name}</p>
+            <p><strong>Last Name:</strong> ${client.last_name}</p>
+        </div>
+    `
+                    )
+                    .join("");
+            }
+
+            function handleSearchClient(event) {
+                event.preventDefault();
+                const query = event.target.querySelector("#q").value;
+                const statusDiv = document.getElementById("search_info");
+
+                sendGetRequest(`http://localhost:2344/search/client?q=${query}`)
+                    .then((response) => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            return response.json().then((errorData) => {
+                                throw new Error(errorData.message || `Request failed with status ${response.status}`);
+                            });
+                        }
+                    })
+                    .then((data) => {
+                        if (data.length > 0) {
+                            statusDiv.innerHTML = `<h3>Search Results:</h3>${prettySearchResults(data)}`;
+                        } else {
+                            statusDiv.innerHTML = `<p>No clients found matching your query.</p>`;
+                        }
+                    })
+                    .catch((err) => {
+                        statusDiv.innerHTML = `<span style="color: red;">Error fetching search results: ${err.message}</span>`;
                     });
             }
 
@@ -284,7 +351,7 @@
             document.forms["add_program"].addEventListener("submit", handleAddProgramFormSubmit);
             document.forms["associate_program"].addEventListener("submit", handleClientPrograms);
             document.forms["profile"].addEventListener("submit", handleGetProfile);
+            document.forms["search_client"].addEventListener("submit", handleSearchClient);
         </script>
     </body>
 </html>
-

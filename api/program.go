@@ -40,7 +40,7 @@ func (p *Program) CreateProgram(w http.ResponseWriter, r *http.Request) {
 	}
 
 	PrintDBResult(res)
-	WriteSuccessProgram(w,program)
+	WriteSuccessProgram(w, program)
 }
 
 // Create a program and write it to the database.

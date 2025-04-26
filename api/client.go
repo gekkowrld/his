@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -186,9 +187,15 @@ func SearchClient(query string, db *sql.DB, search string) ([]search_value, erro
 }
 
 type clientProfile struct {
-	Id        string `json:"id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
+	Id        string    `json:"id"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
+	Programs  []program `json:"programs"`
+}
+
+type program struct {
+	Name string `json:"name"`
+	Id   string `json:"id"`
 }
 
 func (c *Client) ClientProfile(w http.ResponseWriter, r *http.Request) {
@@ -205,7 +212,16 @@ func (c *Client) ClientProfile(w http.ResponseWriter, r *http.Request) {
 func ClientProfile(id string, db *sql.DB, search string) (clientProfile, error) {
 	var profile clientProfile
 	row := db.QueryRow(search, id)
-	row.Scan(&profile.Id, &profile.FirstName, &profile.LastName)
+	var programs string
+	var programNames string
+	row.Scan(&profile.Id, &profile.FirstName, &profile.LastName, &programs, &programNames)
+
+	progIdArr := strings.Split(programs, ",")
+	progNameArr := strings.Split(programNames, ",")
+
+	for x, pid := range progIdArr {
+		profile.Programs = append(profile.Programs, program{Name: progNameArr[x], Id: pid})
+	}
 
 	return profile, nil
 }
