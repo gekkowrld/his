@@ -3,7 +3,6 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -41,7 +40,7 @@ func (p *Program) CreateProgram(w http.ResponseWriter, r *http.Request) {
 	}
 
 	PrintDBResult(res)
-	w.Write([]byte(fmt.Sprintf("%s %s", affectedRows(res.RowsAffected), program.Id)))
+	WriteSuccessProgram(w,program)
 }
 
 // Create a program and write it to the database.

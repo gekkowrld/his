@@ -33,7 +33,7 @@ func ErrorJSON(err EJ) []byte {
 		erc = 404
 	}
 	data, _ := json.Marshal(struct {
-		Message string `json:"name"`
+		Message string `json:"message"`
 		Code    int    `json:"code"`
 	}{
 		Message: err.Message.Error(),
@@ -93,4 +93,13 @@ func WriteSucessClientProgram(w http.ResponseWriter, clientId string, programs [
 		WriteError(w, EJ{Message: err, Code: http.StatusInternalServerError})
 	}
 	writeHttp(w, data)
+}
+
+func WriteSuccessProgram(w http.ResponseWriter, program ProgramInfo) {
+	data,err := json.Marshal(program)
+	if err != nil {
+		WriteError(w, EJ{Message: err, Code: http.StatusInternalServerError})
+	}
+	log.Printf("%#v\n", program)
+	writeHttp(w,data)
 }

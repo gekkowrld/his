@@ -39,6 +39,8 @@
             <button type="submit">Submit</button>
         </form>
 
+        <div id="add_client_info"></div>
+
         <hr />
         <hr />
 
@@ -63,14 +65,16 @@
             <button type="submit">Submit</button>
         </form>
 
+        <div id="add_program_info"></div>
+
         <hr />
         <hr />
 
         <h2>Associate Programs with a client</h2>
         <form name="associate_program">
             <p>
-                <label for="client_id">Client Id:</label>
-                <input type="text" id="client_p_id" name="client_id" />
+                <label for="associated_client_id">Client Id:</label>
+                <input type="text" id="associated_client_id" name="associated_client_id" />
             </p>
             <label for="programs">Enter program ids each in a line</label>
             <br />
@@ -80,6 +84,8 @@
             <br />
             <button type="submit">Submit</button>
         </form>
+
+        <div id="associate_program_info"></div>
 
         <hr />
         <hr />
@@ -103,6 +109,8 @@
             </p>
         </form>
 
+        <div id="profile_info"></div>
+
         <script>
             function getAuthHeaders() {
                 const username = document.getElementById("username").value;
@@ -119,7 +127,7 @@
                     method: "POST",
                     headers: headers,
                     body: JSON.stringify(data),
-                }).then((response) => response.json());
+                });
             }
 
             function sendGetRequest(url) {
@@ -127,7 +135,7 @@
                 return fetch(url, {
                     method: "GET",
                     headers: headers,
-                }).then((response) => response.json());
+                });
             }
 
             function getAddClientFormData(form) {
@@ -158,7 +166,7 @@
                     name: name,
                     description: description,
                     start_date: start_date,
-                    end_date: end_date,
+                    end_date: end_date
                 };
             }
 
@@ -173,7 +181,7 @@
                 const arrPrograms = programLines.map((line) => line.trim()).filter((line) => line.length > 0);
 
                 return {
-                    programs: arrPrograms,
+                    programs: arrPrograms
                 };
             }
 
@@ -181,35 +189,95 @@
                 event.preventDefault();
                 const form = event.target;
                 const formData = getAddClientFormData(form);
+                const statusDiv = document.getElementById("add_client_info");
+
                 sendPostRequest("http://localhost:2344/client/new", formData)
-                    .then((data) => console.log("Client added:", data))
-                    .catch((err) => console.error("Error adding client:", err));
+                    .then((response) => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            return response.json().then((errorData) => {
+                                throw new Error(errorData.message || `Request failed with status ${response.status}`);
+                            });
+                        }
+                    })
+                    .then((data) => {
+                        statusDiv.innerHTML = `<span style="color: green;">Client added successfully! ID: ${data.id}</span>`;
+                    })
+                    .catch((err) => {
+                        statusDiv.innerHTML = `<span style="color: red;">Error adding client: ${err.message}</span>`;
+                    });
             }
 
             function handleAddProgramFormSubmit(event) {
                 event.preventDefault();
                 const form = event.target;
                 const formData = getAddProgramFormData(form);
+                const statusDiv = document.getElementById("add_program_info");
+
                 sendPostRequest("http://localhost:2344/program/new", formData)
-                    .then((data) => console.log("Program added:", data))
-                    .catch((err) => console.error("Error adding program:", err));
+                    .then((response) => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            return response.json().then((errorData) => {
+                                throw new Error(errorData.message || `Request failed with status ${response.status}`);
+                            });
+                        }
+                    })
+                    .then((data) => {
+                        statusDiv.innerHTML = `<span style="color: green;">Program added successfully! ID: ${data.id}</span>`;
+                    })
+                    .catch((err) => {
+                        statusDiv.innerHTML = `<span style="color: red;">Error adding program: ${err.message}</span>`;
+                    });
             }
 
             function handleClientPrograms(event) {
                 event.preventDefault();
                 const form = event.target;
                 const formData = getClientProgramsFormData(form);
-                sendPostRequest(`http://localhost:2344/client/${form.querySelector("#client_id").value}`, formData)
-                    .then((data) => console.log("Programs client association added:", data))
-                    .catch((err) => console.error("Error adding association:", err));
+                const statusDiv = document.getElementById("associate_program_info");
+
+                sendPostRequest(`http://localhost:2344/client/${form.querySelector("#associated_client_id").value}`, formData)
+                    .then((response) => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            return response.json().then((errorData) => {
+                                throw new Error(errorData.message || `Request failed with status ${response.status}`);
+                            });
+                        }
+                    })
+                    .then((data) => {
+                        statusDiv.innerHTML = `<span style="color: green;">Programs successfully associated with client!</span>`;
+                    })
+                    .catch((err) => {
+                        statusDiv.innerHTML = `<span style="color: red;">Error associating programs: ${err.message}</span>`;
+                    });
             }
 
             function handleGetProfile(event) {
                 event.preventDefault();
                 const client_id = event.target.querySelector("#client_id").value;
+                const statusDiv = document.getElementById("profile_info");
+
                 sendGetRequest(`http://localhost:2344/client/${client_id}`)
-                    .then((data) => console.log("Client profile:", data))
-                    .catch((err) => console.error("Error fetching profile:", err));
+                    .then((response) => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            return response.json().then((errorData) => {
+                                throw new Error(errorData.message || `Request failed with status ${response.status}`);
+                            });
+                        }
+                    })
+                    .then((data) => {
+                        statusDiv.innerHTML = `<span style="color: green;">Client profile: ${JSON.stringify(data)}</span>`;
+                    })
+                    .catch((err) => {
+                        statusDiv.innerHTML = `<span style="color: red;">Error fetching client profile: ${err.message}</span>`;
+                    });
             }
 
             document.forms["add_client"].addEventListener("submit", handleAddClientFormSubmit);
@@ -219,3 +287,4 @@
         </script>
     </body>
 </html>
+
