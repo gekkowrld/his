@@ -73,19 +73,19 @@ func main() {
 	}
 
 	router := http.NewServeMux()
-	router.HandleFunc("POST /program", prog.CreateProgram)
-	router.HandleFunc("POST /client", client.CreateClient)
+	router.HandleFunc("POST /program/new", prog.CreateProgram)
+	router.HandleFunc("POST /client/new", client.CreateClient)
 	router.HandleFunc("POST /client/{id}", client.ClientProgram)
 	router.HandleFunc("GET /search/client", client.SearchClient)
 	router.HandleFunc("GET /client/{id}", client.ClientProfile)
 
-	server := http.Server{Addr: ":2343", Handler: router}
+	server := http.Server{Addr: ":2344", Handler: router}
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		log.Println("Started server at 2343")
+		log.Println("Started server at 2344")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("HTTP server ListenAndServe: %v", err)
 		}
