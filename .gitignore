@@ -24,3 +24,7 @@ go.work.sum
 
 # Others
 db/health_sys
+*.sh
+client/client
+tools/run
+tools/tools
