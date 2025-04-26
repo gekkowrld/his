@@ -5,6 +5,19 @@
     </head>
     <body>
         <h1>The Health Information System Demo</h1>
+
+        <h2>Authorization</h2>
+        <form name="auth">
+            <p>
+                <label for="username">Username:</label>
+                <input type="text" name="username" id="username">
+            </p>
+            <p>
+                <label for="passwd">Password:</label>
+                <input type="password" name="passwd" id="passwd">
+            </p>
+        </form>
+
         <h2>Add a client</h2>
         <form name="add_client">
             <p>
@@ -57,7 +70,7 @@
         <form name="associate_program">
             <p>
                 <label for="client_id">Client Id:</label>
-                <input type="text" id="client_id" name="client_id" />
+                <input type="text" id="client_p_id" name="client_id" />
             </p>
             <label for="programs">Enter program ids each in a line</label>
             <br />
@@ -91,13 +104,29 @@
         </form>
 
         <script>
+            function getAuthHeaders() {
+                const username = document.getElementById("username").value;
+                const password = document.getElementById("passwd").value;
+                return {
+                    "Content-Type": "application/json",
+                    "Authorization": `Basic ${btoa(username + ":" + password)}`
+                };
+            }
+
             function sendPostRequest(url, data) {
+                const headers = getAuthHeaders();
                 return fetch(url, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
+                    headers: headers,
                     body: JSON.stringify(data),
+                }).then((response) => response.json());
+            }
+
+            function sendGetRequest(url) {
+                const headers = getAuthHeaders();
+                return fetch(url, {
+                    method: "GET",
+                    headers: headers,
                 }).then((response) => response.json());
             }
 
@@ -147,6 +176,7 @@
                     programs: arrPrograms,
                 };
             }
+
             function handleAddClientFormSubmit(event) {
                 event.preventDefault();
                 const form = event.target;
@@ -177,8 +207,7 @@
             function handleGetProfile(event) {
                 event.preventDefault();
                 const client_id = event.target.querySelector("#client_id").value;
-                fetch(`http://localhost:2344/client/${client_id}`, { method: "GET" })
-                    .then((response) => response)
+                sendGetRequest(`http://localhost:2344/client/${client_id}`)
                     .then((data) => console.log("Client profile:", data))
                     .catch((err) => console.error("Error fetching profile:", err));
             }
@@ -190,4 +219,3 @@
         </script>
     </body>
 </html>
-
