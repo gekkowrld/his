@@ -93,7 +93,7 @@ func (c *Client) ClientProgram(w http.ResponseWriter, r *http.Request) {
 	afr, clp, err := ClientProgram(client_id, json_data, c.DB, c.AddPrograms)
 	rows_affected := fmt.Sprintf("%s client=%s programs=%v", affectedRows(afr), client_id, clp.Programs)
 	log.Println(rows_affected)
-	WriteSucessClientProgram(w,client_id,clp.Programs)
+	WriteSucessClientProgram(w, client_id, clp.Programs)
 }
 
 // Associate a client and multiple programs

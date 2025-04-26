@@ -78,9 +78,9 @@ func WriteClientProfile(w http.ResponseWriter, profile clientProfile) {
 	writeHttp(w, data)
 }
 
-func WriteSucessClientProgram(w http.ResponseWriter, clientId string, programs []string ) {
-	data, err := json.Marshal(struct{
-		ClientId string `json:"client_id"`
+func WriteSucessClientProgram(w http.ResponseWriter, clientId string, programs []string) {
+	data, err := json.Marshal(struct {
+		ClientId string   `json:"client_id"`
 		Programs []string `json:"programs"`
 	}{
 		ClientId: clientId,
@@ -89,5 +89,5 @@ func WriteSucessClientProgram(w http.ResponseWriter, clientId string, programs [
 	if err != nil {
 		WriteError(w, EJ{Message: err, Code: http.StatusInternalServerError})
 	}
-	writeHttp(w,data)
+	writeHttp(w, data)
 }
