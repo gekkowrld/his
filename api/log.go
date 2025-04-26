@@ -45,12 +45,15 @@ func ErrorJSON(err EJ) []byte {
 func WriteError(w http.ResponseWriter, err EJ) {
 	write := ErrorJSON(err)
 	log.Printf("\nCode: %d\nMessage: %s\n", err.Code, err.Message)
-	writeHttp(w, write)
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.WriteHeader(err.Code)
+	w.Write(write)
 }
 
 func WriteSucessClient(w http.ResponseWriter, client ClientInfo) {
 	data, _ := json.Marshal(client)
-	log.Printf("\n%v\n", data)
+	log.Printf("\n%v\n", client)
 	writeHttp(w, data)
 }
 
