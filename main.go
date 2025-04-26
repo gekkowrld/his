@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
+	"crypto/subtle"
 	"database/sql"
 	"embed"
 	"log"
@@ -26,7 +28,18 @@ type rest struct {
 	db *sql.DB
 }
 
+type application struct {
+	auth struct {
+		username string
+		password string
+	}
+}
+
 func main() {
+	app := new(application)
+	app.auth.username = os.Getenv("AUTH_USERNAME")
+	app.auth.password = os.Getenv("AUTH_PASSWORD")
+
 	// can be stored in data/ directory.
 	// but db/ works too
 	res := ress{db_name: "db/health_sys"}
@@ -73,11 +86,11 @@ func main() {
 	}
 
 	router := http.NewServeMux()
-	router.HandleFunc("POST /program/new", prog.CreateProgram)
-	router.HandleFunc("POST /client/new", client.CreateClient)
-	router.HandleFunc("POST /client/{id}", client.ClientProgram)
-	router.HandleFunc("GET /search/client", client.SearchClient)
-	router.HandleFunc("GET /client/{id}", client.ClientProfile)
+	router.HandleFunc("POST /program/new", app.basicAuth(prog.CreateProgram))
+	router.HandleFunc("POST /client/new", app.basicAuth(client.CreateClient))
+	router.HandleFunc("POST /client/{id}", app.basicAuth(client.ClientProgram))
+	router.HandleFunc("GET /search/client", app.basicAuth(client.SearchClient))
+	router.HandleFunc("GET /client/{id}", app.basicAuth(client.ClientProfile))
 
 	server := http.Server{Addr: ":2344", Handler: router}
 
@@ -100,6 +113,29 @@ func main() {
 	}
 
 	teardown(rest)
+}
+
+func (app *application) basicAuth(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		username, password, ok := r.BasicAuth()
+		if ok {
+			usernameHash := sha256.Sum256([]byte(username))
+			passwordHash := sha256.Sum256([]byte(password))
+			expectedUsernameHash := sha256.Sum256([]byte(app.auth.username))
+			expectedPasswordHash := sha256.Sum256([]byte(app.auth.password))
+
+			usernameMatch := (subtle.ConstantTimeCompare(usernameHash[:], expectedUsernameHash[:]) == 1)
+			passwordMatch := (subtle.ConstantTimeCompare(passwordHash[:], expectedPasswordHash[:]) == 1)
+
+			if usernameMatch && passwordMatch {
+				next.ServeHTTP(w, r)
+				return
+			}
+		}
+
+		w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	})
 }
 
 // Setup the db and other resouces before the program runs.
