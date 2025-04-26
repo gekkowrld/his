@@ -48,6 +48,11 @@ All endpoints require basic authentication using `user:password`.
 If the authentication is missing or incorrect, the request will fail.
 Consult your tool or client on how to include authentication headers.
 
+If an error occurs, the following will be returned:
+
+- `message` (string) The error message
+- `code` (int) The HTTP error code.
+
 ### Available Endpoints
 
 #### POST /client/new
