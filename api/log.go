@@ -45,8 +45,49 @@ func ErrorJSON(err EJ) []byte {
 func WriteError(w http.ResponseWriter, err EJ) {
 	write := ErrorJSON(err)
 	log.Printf("\nCode: %d\nMessage: %s\n", err.Code, err.Message)
+	writeHttp(w, write)
+}
+
+func WriteSucessClient(w http.ResponseWriter, client ClientInfo) {
+	data, _ := json.Marshal(client)
+	log.Printf("\n%v\n", data)
+	writeHttp(w, data)
+}
+
+func writeHttp(w http.ResponseWriter, data []byte) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
-	w.WriteHeader(err.Code)
-	w.Write(write)
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+}
+
+func WriteClientSearchResults(w http.ResponseWriter, search []search_value) {
+	data, err := json.Marshal(search)
+	if err != nil {
+		WriteError(w, EJ{Message: err, Code: http.StatusInternalServerError})
+	}
+	writeHttp(w, data)
+}
+
+func WriteClientProfile(w http.ResponseWriter, profile clientProfile) {
+	data, err := json.Marshal(profile)
+	if err != nil {
+		WriteError(w, EJ{Message: err, Code: http.StatusInternalServerError})
+	}
+	log.Printf("%s\n", profile)
+	writeHttp(w, data)
+}
+
+func WriteSucessClientProgram(w http.ResponseWriter, clientId string, programs []string ) {
+	data, err := json.Marshal(struct{
+		ClientId string `json:"client_id"`
+		Programs []string `json:"programs"`
+	}{
+		ClientId: clientId,
+		Programs: programs,
+	})
+	if err != nil {
+		WriteError(w, EJ{Message: err, Code: http.StatusInternalServerError})
+	}
+	writeHttp(w,data)
 }

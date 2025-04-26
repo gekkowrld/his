@@ -44,7 +44,7 @@ func (c *Client) CreateClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	PrintDBResult(res)
-	w.Write([]byte(fmt.Sprintf("%s %s", affectedRows(res.RowsAffected), client.Id)))
+	WriteSucessClient(w, client)
 }
 
 func CreateClient(jsonData []byte, db *sql.DB, insertSQL string) (sql.Result, ClientInfo, error) {
@@ -93,7 +93,7 @@ func (c *Client) ClientProgram(w http.ResponseWriter, r *http.Request) {
 	afr, clp, err := ClientProgram(client_id, json_data, c.DB, c.AddPrograms)
 	rows_affected := fmt.Sprintf("%s client=%s programs=%v", affectedRows(afr), client_id, clp.Programs)
 	log.Println(rows_affected)
-	w.Write([]byte(rows_affected))
+	WriteSucessClientProgram(w,client_id,clp.Programs)
 }
 
 // Associate a client and multiple programs
@@ -142,9 +142,9 @@ func ClientProgram(id string, jsonData []byte, db *sql.DB, addPrograms string) (
 }
 
 type search_value struct {
-	Id        string
-	FirstName string
-	LastName  string
+	Id        string `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 }
 
 // search the client table for matches.
@@ -160,7 +160,7 @@ func (c *Client) SearchClient(w http.ResponseWriter, r *http.Request) {
 
 	str := fmt.Sprintf("Results for: %s\n%v\n", search_term, search_values)
 	log.Println(str)
-	w.Write([]byte(str))
+	WriteClientSearchResults(w, search_values)
 }
 
 func SearchClient(query string, db *sql.DB, search string) ([]search_value, error) {
@@ -186,9 +186,9 @@ func SearchClient(query string, db *sql.DB, search string) ([]search_value, erro
 }
 
 type clientProfile struct {
-	Id        string
-	FirstName string
-	LastName  string
+	Id        string `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 }
 
 func (c *Client) ClientProfile(w http.ResponseWriter, r *http.Request) {
@@ -198,7 +198,7 @@ func (c *Client) ClientProfile(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, EJ{Message: err, Code: http.StatusInternalServerError})
 		return
 	}
-	w.Write([]byte(fmt.Sprintf("%#v\n", info)))
+	WriteClientProfile(w, info)
 }
 
 // Get user profile and return it.
