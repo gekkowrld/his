@@ -36,6 +36,7 @@ func (p *Program) CreateProgram(w http.ResponseWriter, r *http.Request) {
 	res, program, err := CreateProgram(json_data, p.DB, p.InsertSQL)
 	if err != nil {
 		w.Write([]byte(err.Error()))
+		WriteError(w, EJ{Message: err, Code: http.StatusInternalServerError})
 		return
 	}
 

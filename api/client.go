@@ -33,14 +33,14 @@ type ClientInfo struct {
 func (c *Client) CreateClient(w http.ResponseWriter, r *http.Request) {
 	json_data, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		WriteError(w, EJ{Message: err, Code: http.StatusInternalServerError})
 		return
 	}
 	defer r.Body.Close()
 
 	res, client, err := CreateClient(json_data, c.DB, c.InsertSQL)
 	if err != nil {
-		w.Write([]byte(err.Error()))
+		WriteError(w, EJ{Message: err, Code: http.StatusInternalServerError})
 		return
 	}
 	PrintDBResult(res)
@@ -85,7 +85,7 @@ func (c *Client) ClientProgram(w http.ResponseWriter, r *http.Request) {
 	client_id := r.PathValue("id")
 	json_data, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		WriteError(w, EJ{Message: err, Code: http.StatusInternalServerError})
 		return
 	}
 	defer r.Body.Close()
@@ -154,7 +154,7 @@ func (c *Client) SearchClient(w http.ResponseWriter, r *http.Request) {
 	search_term := r.URL.Query().Get("q")
 	search_values, err := SearchClient(search_term, c.DB, c.Search)
 	if err != nil {
-		w.Write([]byte(err.Error()))
+		WriteError(w, EJ{Message: err, Code: http.StatusInternalServerError})
 		return
 	}
 
@@ -195,7 +195,7 @@ func (c *Client) ClientProfile(w http.ResponseWriter, r *http.Request) {
 	client_id := r.PathValue("id")
 	info, err := ClientProfile(client_id, c.DB, c.Profile)
 	if err != nil {
-		w.Write([]byte(err.Error()))
+		WriteError(w, EJ{Message: err, Code: http.StatusInternalServerError})
 		return
 	}
 	w.Write([]byte(fmt.Sprintf("%#v\n", info)))

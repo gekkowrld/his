@@ -6,6 +6,7 @@ import (
 	"crypto/subtle"
 	"database/sql"
 	"embed"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -134,7 +135,7 @@ func (app *application) basicAuth(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		api.WriteError(w, api.EJ{Message: fmt.Errorf("Unathorized access of %s", r.URL.String()), Code: http.StatusUnauthorized})
 	})
 }
 
